@@ -370,6 +370,7 @@ class CRM_Contact_Form_Search_Custom_KamSearch extends CRM_Contact_Form_Search_C
         $clauses[] = "contact.id IN ( $contactIDs )";
       }
     }
+    $clauses[] = "c.is_deleted = 0";
 
     return implode(' AND ', $clauses);
   }
