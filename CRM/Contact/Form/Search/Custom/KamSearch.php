@@ -47,15 +47,15 @@ class CRM_Contact_Form_Search_Custom_KamSearch extends CRM_Contact_Form_Search_C
     $group = CRM_Core_PseudoConstant::nestedGroup();
     
     $form->addElement('text', 'name', ts('Jméno nebo email'));
-    $form->addElement('select', 'type', ts('Druh kontaktu'), [], ['class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => 'loading...', 'disabled']);
+    $form->addElement('select', 'type', ts('Druh kontaktu'), [], ["id" => "custom-loading-1", 'class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => 'loading...', 'disabled']);
     $form->addElement('select', 'group', ts('Je ve skupině'), $group, ['class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => '- je ve skupině -']);
-    $form->addElement('select', 'country', ts('Země'), ['' => 'loading...'], ['class' => 'crm-select2 huge', 'disabled', 'onChange'=>'CountryChange(this.value)']);
-    $form->addElement('select', 'kraj', ts('Kraj'), [], ['class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => '- zvolte první zemi -', 'disabled']);
+    $form->addElement('select', 'country', ts('Země'), ['' => 'loading...'], ["id" => "custom-loading-2", 'class' => 'crm-select2 huge', 'disabled', 'onChange'=>'CountryChange(this.value)']);
+    $form->addElement('select', 'kraj', ts('Kraj'), [], ["id" => "custom-loading-3", 'class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => '- zvolte první zemi -', 'disabled']);
     $form->addElement('text', 'address_name', ts('Název adresy'));
-    $form->addElement('select', 'kam_region', ts('KAM region'), [], ['class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => 'loading...', 'disabled']);
-    $form->addElement('select', 'denomination', ts('Církev/Denominace'), [], ['class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => 'loading...', 'disabled']);
-    $form->addElement('select', 'relationship', ts('Má vztah'), [], ['class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => 'loading...', 'disabled']);
-    $form->addElement('select', 'event', ts('Účastník události'), [], ['class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => 'loading...', 'disabled']);
+    $form->addElement('select', 'kam_region', ts('KAM region'), [], ["id" => "custom-loading-4", 'class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => 'loading...', 'disabled']);
+    $form->addElement('select', 'denomination', ts('Církev/Denominace'), [], ["id" => "custom-loading-5", 'class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => 'loading...', 'disabled']);
+    $form->addElement('select', 'relationship', ts('Má vztah'), [], ["id" => "custom-loading-6", 'class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => 'loading...', 'disabled']);
+    $form->addElement('select', 'event', ts('Účastník události'), [], ["id" => "custom-loading-7", 'class' => 'crm-select2 huge','multiple' => 'multiple','placeholder' => 'loading...', 'disabled']);
     
     $form->addElement('checkbox', 'check_email', "Email", '', ['class' => 'crm-form-checkbox']);
     $form->addElement('checkbox', 'check_phone', "Telefon", '', ['class' => 'crm-form-checkbox']);
@@ -164,20 +164,6 @@ class CRM_Contact_Form_Search_Custom_KamSearch extends CRM_Contact_Form_Search_C
    }
 
   /**
-   * Get the metadata for fields to be included on the contact search form.
-   */
-  public static function getSearchFieldMetadata() {
-    $fields = [
-      'receive_date' => ['title' => ''],
-    ];
-    $metadata = civicrm_api3('Contribution', 'getfields', [])['values'];
-    foreach ($fields as $fieldName => $field) {
-      $fields[$fieldName] = array_merge(CRM_Utils_Array::value($fieldName, $metadata, []), $field);
-    }
-    return $fields;
-  }
-
-  /**
    * WHERE clause is an array built from any required JOINS plus conditional filters based on search criteria field values.
    *
    * @param bool $includeContactIDs
@@ -267,7 +253,7 @@ class CRM_Contact_Form_Search_Custom_KamSearch extends CRM_Contact_Form_Search_C
          ]);
          $pom[]="(c.id in (select contact_id
                      from civicrm_group_contact
-                     where group_id = {$g})
+                     where group_id = {$g} and status = 'Added')
                      OR
                      c.id in (select contact_id
                      from civicrm_group_contact_cache
@@ -443,133 +429,5 @@ class CRM_Contact_Form_Search_Custom_KamSearch extends CRM_Contact_Form_Search_C
   }
 }
 
-?>
-<script>
-function CountryChange(value) {
-  CRM.$("#s2id_autogen4").val('loading...');
-  if(value!="") {
-    var o;
-    CRM.api3('StateProvince', 'get', {
-      "sequential": 1,
-      "return": ["name"],
-      "country_id": value,
-      "options": {"limit":0}
-    }).then(function(result) {
-      CRM.$("#s2id_kraj .select2-search-choice").remove();
-      CRM.$("#kraj").find('option').remove();    
-      for (var i = 0; i < result["values"].length; i++) {
-        o=new Option(result["values"][i]["name"], result["values"][i]["id"]);
-        CRM.$(o).html(result["values"][i]["name"]);
-        CRM.$("#kraj").append(o);
-      }
-      CRM.$("#s2id_autogen4").val('- libovolný kraj -');
-      CRM.$("#kraj").attr('placeholder', '- libovolný kraj -');
-      CRM.$("#kraj").attr("disabled", false);
-    }, function(error) {
-      // oops
-    });
-  } else {
-    //$("#kraj option:selected").prop("selected", false);
-    CRM.$("#s2id_autogen4").val('- zvolte první zemi -');
-    CRM.$("#s2id_kraj .select2-search-choice").remove();
-    CRM.$("#kraj").find('option').remove();
-    CRM.$("#kraj").attr("disabled", true);
-  }
-
-}
-
-CRM.$(function($) {
-  CRM.api3('ContactType', 'get', {
-    "sequential": 1,
-    "return": ["label", "name", "parent_id"],
-    'is_active': 1,
-    "options": {"limit":0, "sort":"parent_id, id"}
-  }).then(function(result) {
-    for (var i = 0; i < result["values"].length; i++) {
-      if(result["values"][i]["parent_id"]==null) {
-        o=new Option(result["values"][i]["label"], result["values"][i]["id"]+"%typ%"+result["values"][i]["name"]);
-        CRM.$("#type").append(o);
-      } else {
-        o=new Option(" - "+result["values"][i]["label"], result["values"][i]["id"]+"%subtyp%"+result["values"][i]["name"]);
-        CRM.$("#type").find("option[value^='"+result["values"][i]["parent_id"]+"%typ%']").after(o);
-      }
-    }    
-    CRM.$("#s2id_autogen1").val('- libovolný typ kontaktu -');
-    CRM.$("#type").attr('placeholder', '- libovolný typ kontaktu -');
-    CRM.$("#type").attr("disabled", false);
-  });
-  
-  CRM.api3('Country', 'get', {
-    "sequential": 1,
-    "return": ["name"],
-    'is_active': 1,
-    "options": {"limit":0, "sort":"name"}
-  }).then(function(result) {  
-    for (var i = 0; i < result["values"].length; i++) {
-      o=new Option(result["values"][i]["name"], result["values"][i]["id"]);
-      CRM.$("#country").append(o);    
-    }  
-    CRM.$("#select2-chosen-3").html(' - libovolná země - '); 
-    CRM.$("#country").find("option[value='']").html(" - libovolná země - ");
-    CRM.$("#country").attr("disabled", false); 
-  });
-  
-  CRM.api3('OptionValue', 'get', {
-    "sequential": 1,
-    "return": ["label", "value", "option_group_id"],
-    'is_active': 1,
-    'option_group_id': {"IN":["region_20180617055921", "denominace_20170221220023"]},
-    "options": {"limit":0, "sort":"label"}
-  }).then(function(result) {  
-    for (var i = 0; i < result["values"].length; i++) {
-      o=new Option(result["values"][i]["label"], result["values"][i]["value"]);
-      if(result["values"][i]["option_group_id"]=="146") {
-        CRM.$("#kam_region").append(o);   
-      } else {
-        CRM.$("#denomination").append(o);   
-      }     
-    }   
-    CRM.$("#s2id_autogen5").val('- libovolný region -');
-    CRM.$("#s2id_autogen6").val('- libovolná denominace -');
-    CRM.$("#kam_region").attr('placeholder', '- libovolný region -');
-    CRM.$("#denomination").attr('placeholder', '- libovolná denominace -');
-    CRM.$("#kam_region").attr("disabled", false);   
-    CRM.$("#denomination").attr("disabled", false); 
-  });
-  CRM.api3('RelationshipType', 'get', {
-    "sequential": 1,
-    "return": ["label_a_b","label_b_a"],
-    'is_active': 1,
-    "options": {"limit":0, 'sort':"label_a_b"}
-  }).then(function(result) {
-    for (var i = 0; i < result["values"].length; i++) {
-      if(result["values"][i]["label_a_b"] == result["values"][i]["label_b_a"]) {
-        o=new Option(result["values"][i]["label_a_b"], result["values"][i]["id"]);
-      } else {
-        o=new Option(result["values"][i]["label_a_b"]+' <nebo> '+result["values"][i]["label_b_a"], result["values"][i]["id"]);
-      }
-      CRM.$("#relationship").append(o);
-    }
-    CRM.$("#s2id_autogen7").val('- libovolný vztah -');
-    CRM.$("#relationship").attr('placeholder', '- libovolný vztah -');
-    CRM.$("#relationship").attr("disabled", false);
-  });
-  CRM.api3('Event', 'get', {
-    "sequential": 1,
-    "return": ["event_title"],
-    'is_active': 1,
-    "options": {"limit":0, "sort":"event_title"}
-  }).then(function(result) { 
-    for (var i = 0; i < result["values"].length; i++) {
-      o=new Option(result["values"][i]["event_title"], result["values"][i]["id"]);
-      CRM.$("#event").append(o);    
-    }   
-    CRM.$("#s2id_autogen8").val('- libovolná akce -');
-    CRM.$("#event").attr('placeholder', '- libovolná akce -');
-    CRM.$("#event").attr("disabled", false); 
-  });
-});
-</script>
-<?php
 
 

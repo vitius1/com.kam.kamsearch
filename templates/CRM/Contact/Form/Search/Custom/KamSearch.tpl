@@ -164,3 +164,132 @@ CRM.$(".crm-ajax-selection-form").removeClass("crm-ajax-selection-form");
 {/if}
 </div>
 {/if}
+
+<script>
+{literal}
+function CountryChange(value) {
+  CRM.$("#s2id_custom-loading-3").find('[id^="s2id_autogen"]').val('loading...');
+  if(value!="") {
+    var o;
+    CRM.api3('StateProvince', 'get', {
+      "sequential": 1,
+      "return": ["name"],
+      "country_id": value,
+      "options": {"limit":0}
+    }).then(function(result) {
+      CRM.$("#s2id_kraj .select2-search-choice").remove();
+      CRM.$("#custom-loading-3").find('option').remove();    
+      for (var i = 0; i < result["values"].length; i++) {
+        o=new Option(result["values"][i]["name"], result["values"][i]["id"]);
+        CRM.$(o).html(result["values"][i]["name"]);
+        CRM.$("#custom-loading-3").append(o);
+      }
+      CRM.$("#s2id_custom-loading-3").find('[id^="s2id_autogen"]').val('- libovolný kraj -');
+      CRM.$("#custom-loading-3").attr('placeholder', '- libovolný kraj -');
+      CRM.$("#custom-loading-3").attr("disabled", false);
+    }, function(error) {
+      // oops
+    });
+  } else {
+    //$("#kraj option:selected").prop("selected", false);
+    CRM.$("#s2id_custom-loading-3").find('[id^="s2id_autogen"]').val('- zvolte první zemi -');
+    CRM.$("#s2id_kraj .select2-search-choice").remove();
+    CRM.$("#custom-loading-3").find('option').remove();
+    CRM.$("#custom-loading-3").attr("disabled", true);
+  }
+
+}
+
+CRM.$(function($) {
+  CRM.api3('ContactType', 'get', {
+    "sequential": 1,
+    "return": ["label", "name", "parent_id"],
+    'is_active': 1,
+    "options": {"limit":0, "sort":"parent_id, id"}
+  }).then(function(result) {
+    for (var i = 0; i < result["values"].length; i++) {
+      if(result["values"][i]["parent_id"]==null) {
+        o=new Option(result["values"][i]["label"], result["values"][i]["id"]+"%typ%"+result["values"][i]["name"]);
+        CRM.$("#custom-loading-1").append(o);
+      } else {
+        o=new Option(" - "+result["values"][i]["label"], result["values"][i]["id"]+"%subtyp%"+result["values"][i]["name"]);
+        CRM.$("#custom-loading-1").find("option[value^='"+result["values"][i]["parent_id"]+"%typ%']").after(o);
+      }
+    }    
+    CRM.$("#s2id_custom-loading-1").find('[id^="s2id_autogen"]').val('- libovolný typ kontaktu -');
+    CRM.$("#custom-loading-1").attr('placeholder', '- libovolný typ kontaktu -');
+    CRM.$("#custom-loading-1").attr("disabled", false);
+  });
+  
+  CRM.api3('Country', 'get', {
+    "sequential": 1,
+    "return": ["name"],
+    'is_active': 1,
+    "options": {"limit":0, "sort":"name"}
+  }).then(function(result) {  
+    for (var i = 0; i < result["values"].length; i++) {
+      o=new Option(result["values"][i]["name"], result["values"][i]["id"]);
+      CRM.$("#custom-loading-2").append(o);    
+    }  
+    CRM.$("#s2id_custom-loading-2").find('[id^="select2-chosen"]').html(' - libovolná země - '); 
+    CRM.$("#custom-loading-2").find("option[value='']").val(" - libovolná země - ");
+    CRM.$("#custom-loading-2").attr("disabled", false); 
+  });
+  
+  CRM.api3('OptionValue', 'get', {
+    "sequential": 1,
+    "return": ["label", "value", "option_group_id"],
+    'is_active': 1,
+    'option_group_id': {"IN":["region_20180617055921", "denominace_20170221220023"]},
+    "options": {"limit":0, "sort":"label"}
+  }).then(function(result) {  
+    for (var i = 0; i < result["values"].length; i++) {
+      o=new Option(result["values"][i]["label"], result["values"][i]["value"]);
+      if(result["values"][i]["option_group_id"]=="146") {
+        CRM.$("#custom-loading-4").append(o);   
+      } else {
+        CRM.$("#custom-loading-5").append(o);   
+      }     
+    }   
+    CRM.$("#s2id_custom-loading-4").find('[id^="s2id_autogen"]').val('- libovolný region -');
+    CRM.$("#s2id_custom-loading-5").find('[id^="s2id_autogen"]').val('- libovolná denominace -');
+    CRM.$("#custom-loading-4").attr('placeholder', '- libovolný region -');
+    CRM.$("#custom-loading-5").attr('placeholder', '- libovolná denominace -');
+    CRM.$("#custom-loading-4").attr("disabled", false);   
+    CRM.$("#custom-loading-5").attr("disabled", false); 
+  });
+  CRM.api3('RelationshipType', 'get', {
+    "sequential": 1,
+    "return": ["label_a_b","label_b_a"],
+    'is_active': 1,
+    "options": {"limit":0, 'sort':"label_a_b"}
+  }).then(function(result) {
+    for (var i = 0; i < result["values"].length; i++) {
+      if(result["values"][i]["label_a_b"] == result["values"][i]["label_b_a"]) {
+        o=new Option(result["values"][i]["label_a_b"], result["values"][i]["id"]);
+      } else {
+        o=new Option(result["values"][i]["label_a_b"]+' <nebo> '+result["values"][i]["label_b_a"], result["values"][i]["id"]);
+      }
+      CRM.$("#custom-loading-6").append(o);
+    }
+    CRM.$("#s2id_custom-loading-6").find('[id^="s2id_autogen"]').val('- libovolný vztah -');
+    CRM.$("#custom-loading-6").attr('placeholder', '- libovolný vztah -');
+    CRM.$("#custom-loading-6").attr("disabled", false);
+  });
+  CRM.api3('Event', 'get', {
+    "sequential": 1,
+    "return": ["event_title"],
+    'is_active': 1,
+    "options": {"limit":0, "sort":"event_title"}
+  }).then(function(result) { 
+    for (var i = 0; i < result["values"].length; i++) {
+      o=new Option(result["values"][i]["event_title"], result["values"][i]["id"]);
+      CRM.$("#custom-loading-7").append(o);    
+    }   
+    CRM.$("#s2id_custom-loading-7").find('[id^="s2id_autogen"]').val('- libovolná akce -');
+    CRM.$("#custom-loading-7").attr('placeholder', '- libovolná akce -');
+    CRM.$("#custom-loading-7").attr("disabled", false); 
+  });
+});
+{/literal}
+</script>
